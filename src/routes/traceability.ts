@@ -4,6 +4,208 @@ import { ApiResponse, TraceabilityMatrix } from '../types';
 
 export const traceabilityRouter = Router();
 
+// In-memory storage for demonstration (in production, use database)
+let userJourneys: any[] = [
+  {
+    id: '1',
+    title: 'User Registration and Onboarding',
+    description: 'Complete user registration flow from sign-up to profile completion',
+    persona: 'New User',
+    priority: 'High',
+    status: 'Approved',
+    businessScenarios: ['1', '2'],
+    createdDate: '2024-08-01',
+    owner: 'Product Team',
+    tags: ['Authentication', 'Onboarding'],
+    jiraLink: 'PROJ-123',
+    confluenceLink: 'https://confluence.company.com/user-journeys/registration'
+  },
+  {
+    id: '2',
+    title: 'E-commerce Purchase Flow',
+    description: 'End-to-end purchase experience from product selection to order confirmation',
+    persona: 'Customer',
+    priority: 'High',
+    status: 'Approved',
+    businessScenarios: ['3', '4', '5'],
+    createdDate: '2024-08-05',
+    owner: 'E-commerce Team',
+    tags: ['Purchase', 'Payment'],
+    jiraLink: 'PROJ-456',
+    confluenceLink: 'https://confluence.company.com/user-journeys/purchase'
+  }
+];
+
+let businessScenarios: any[] = [
+  {
+    id: '1',
+    title: 'Email Registration',
+    description: 'User registers using email and password',
+    userJourneyId: '1',
+    acceptanceCriteria: [
+      { id: '1', description: 'User can enter valid email address', status: 'Completed' },
+      { id: '2', description: 'Password meets security requirements', status: 'Completed' },
+      { id: '3', description: 'Email verification sent successfully', status: 'Completed' }
+    ],
+    testCases: ['1', '2', '3'],
+    priority: 'High',
+    status: 'Completed',
+    techStack: ['React', 'Node.js', 'PostgreSQL'],
+    channels: ['Web', 'Mobile'],
+    owner: 'Dev Team A',
+    jiraTicket: 'PROJ-124',
+    confluenceLink: 'https://confluence.company.com/scenarios/email-registration'
+  }
+];
+
+let testCases: any[] = [
+  {
+    id: '1',
+    title: 'Valid Email Registration',
+    description: 'Test successful registration with valid email and password',
+    businessScenarioId: '1',
+    type: 'E2E',
+    automationStatus: 'Automated',
+    status: 'Passed',
+    priority: 'High',
+    assignee: 'QA Team',
+    lastExecuted: '2024-08-13',
+    executionResult: 'Pass',
+    githubLink: 'https://github.com/company/tests/registration.spec.ts',
+    defects: [],
+    techStack: ['Playwright', 'TypeScript'],
+    channels: ['Web']
+  }
+];
+
+// GET /api/traceability/overview - Get overview metrics
+traceabilityRouter.get('/overview', (req: Request, res: Response) => {
+  try {
+    const totalUserJourneys = userJourneys.length;
+    const totalBusinessScenarios = businessScenarios.length;
+    const totalTestCases = testCases.length;
+    const automatedTests = testCases.filter(tc => tc.automationStatus === 'Automated').length;
+    const passedTests = testCases.filter(tc => tc.executionResult === 'Pass').length;
+    const openDefects = testCases.flatMap(tc => tc.defects || []).filter(d => d.status === 'Open').length;
+
+    return res.json({
+      success: true,
+      data: {
+        overview: {
+          totalUserJourneys,
+          totalBusinessScenarios,
+          totalTestCases,
+          automatedTests,
+          passedTests,
+          openDefects,
+          coveragePercentage: totalTestCases > 0 ? Math.round((passedTests / totalTestCases) * 100) : 0,
+          automationPercentage: totalTestCases > 0 ? Math.round((automatedTests / totalTestCases) * 100) : 0
+        },
+        userJourneys,
+        businessScenarios,
+        testCases
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to fetch traceability overview'
+    });
+  }
+});
+
+// GET /api/traceability/user-journeys - Get all user journeys
+traceabilityRouter.get('/user-journeys', (req: Request, res: Response) => {
+  try {
+    return res.json({
+      success: true,
+      data: userJourneys
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to fetch user journeys'
+    });
+  }
+});
+
+// POST /api/traceability/user-journeys - Create user journey
+traceabilityRouter.post('/user-journeys', (req: Request, res: Response) => {
+  try {
+    const newJourney = {
+      id: Date.now().toString(),
+      ...req.body,
+      createdDate: new Date().toISOString().split('T')[0],
+      businessScenarios: []
+    };
+
+    userJourneys.push(newJourney);
+    
+    return res.status(201).json({
+      success: true,
+      data: newJourney,
+      message: 'User journey created successfully'
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to create user journey'
+    });
+  }
+});
+
+// PUT /api/traceability/user-journeys/:id - Update user journey
+traceabilityRouter.put('/user-journeys/:id', (req: Request, res: Response) => {
+  try {
+    const journeyIndex = userJourneys.findIndex(j => j.id === req.params.id);
+    if (journeyIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'User journey not found'
+      });
+    }
+
+    userJourneys[journeyIndex] = { ...userJourneys[journeyIndex], ...req.body };
+    
+    return res.json({
+      success: true,
+      data: userJourneys[journeyIndex],
+      message: 'User journey updated successfully'
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to update user journey'
+    });
+  }
+});
+
+// DELETE /api/traceability/user-journeys/:id - Delete user journey
+traceabilityRouter.delete('/user-journeys/:id', (req: Request, res: Response) => {
+  try {
+    const journeyIndex = userJourneys.findIndex(j => j.id === req.params.id);
+    if (journeyIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        error: 'User journey not found'
+      });
+    }
+
+    const deletedJourney = userJourneys.splice(journeyIndex, 1)[0];
+    
+    return res.json({
+      success: true,
+      data: deletedJourney,
+      message: 'User journey deleted successfully'
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to delete user journey'
+    });
+  }
+});
+
 /**
  * @swagger
  * /api/traceability/matrix:
