@@ -1,0 +1,1122 @@
+openapi: 3.0.3
+info:
+  title: Complex Banking API
+  description: |
+    A comprehensive banking API with advanced features including:
+    - Multi-factor authentication
+    - Account management across different types
+    - Complex transaction processing
+    - Loan and investment services
+    - Regulatory compliance features
+    - Real-time notifications
+  version: 2.1.0
+  contact:
+    name: Banking API Team
+    email: api-support@bank.com
+    url: https://developer.bank.com
+  license:
+    name: Proprietary
+  termsOfService: https://bank.com/terms
+
+servers:
+  - url: https://api.bank.com/v2
+    description: Production environment
+  - url: https://sandbox-api.bank.com/v2
+    description: Sandbox environment for testing
+  - url: https://staging-api.bank.com/v2
+    description: Staging environment
+
+security:
+  - OAuth2: [read, write]
+  - ApiKeyAuth: []
+
+paths:
+  /auth/login:
+    post:
+      summary: Authenticate user
+      description: Primary authentication endpoint with multi-factor support
+      operationId: authenticateUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Too many login attempts
+        '500':
+          description: Internal server error
+
+  /auth/mfa/verify:
+    post:
+      summary: Verify multi-factor authentication
+      description: Second step of authentication process
+      operationId: verifyMFA
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MFAVerificationRequest'
+      responses:
+        '200':
+          description: MFA verification successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid MFA code
+        '410':
+          description: MFA code expired
+
+  /customers:
+    get:
+      summary: Get customer list
+      description: Retrieve paginated list of customers (admin only)
+      operationId: getCustomers
+      tags:
+        - Customer Management
+      security:
+        - OAuth2: [admin]
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, suspended, pending]
+        - name: accountType
+          in: query
+          schema:
+            type: string
+            enum: [personal, business, corporate]
+      responses:
+        '200':
+          description: Customer list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerListResponse'
+        '403':
+          description: Insufficient permissions
+
+    post:
+      summary: Create new customer
+      description: Register a new customer with KYC verification
+      operationId: createCustomer
+      tags:
+        - Customer Management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          description: Invalid customer data
+        '409':
+          description: Customer already exists
+
+  /customers/{customerId}:
+    get:
+      summary: Get customer details
+      description: Retrieve detailed customer information
+      operationId: getCustomerById
+      tags:
+        - Customer Management
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Customer details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDetails'
+        '404':
+          description: Customer not found
+
+  /accounts:
+    get:
+      summary: Get customer accounts
+      description: Retrieve all accounts for authenticated customer
+      operationId: getAccounts
+      tags:
+        - Account Management
+      security:
+        - OAuth2: [read]
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [checking, savings, credit, loan, investment]
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive, frozen, closed]
+      responses:
+        '200':
+          description: Account list retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+
+    post:
+      summary: Open new account
+      description: Open a new bank account
+      operationId: openAccount
+      tags:
+        - Account Management
+      security:
+        - OAuth2: [write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenAccountRequest'
+      responses:
+        '201':
+          description: Account opened successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '400':
+          description: Invalid account request
+        '409':
+          description: Account limit exceeded
+
+  /accounts/{accountId}/transactions:
+    get:
+      summary: Get account transactions
+      description: Retrieve transaction history for an account
+      operationId: getAccountTransactions
+      tags:
+        - Transactions
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [debit, credit, transfer, fee, interest]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        '200':
+          description: Transaction history retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionListResponse'
+
+  /transactions/transfer:
+    post:
+      summary: Transfer funds
+      description: Transfer money between accounts with fraud detection
+      operationId: transferFunds
+      tags:
+        - Transactions
+      security:
+        - OAuth2: [write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferRequest'
+      responses:
+        '200':
+          description: Transfer completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferResponse'
+        '400':
+          description: Invalid transfer request
+        '402':
+          description: Insufficient funds
+        '403':
+          description: Transfer not allowed
+        '423':
+          description: Account locked
+
+  /transactions/batch:
+    post:
+      summary: Process batch transactions
+      description: Process multiple transactions atomically
+      operationId: processBatchTransactions
+      tags:
+        - Transactions
+      security:
+        - OAuth2: [batch_write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchTransactionRequest'
+      responses:
+        '200':
+          description: Batch processing completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchTransactionResponse'
+        '207':
+          description: Partial success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchTransactionResponse'
+
+  /loans:
+    get:
+      summary: Get customer loans
+      description: Retrieve all loans for authenticated customer
+      operationId: getLoans
+      tags:
+        - Loan Services
+      security:
+        - OAuth2: [read]
+      responses:
+        '200':
+          description: Loan list retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Loan'
+
+    post:
+      summary: Apply for loan
+      description: Submit a new loan application
+      operationId: applyForLoan
+      tags:
+        - Loan Services
+      security:
+        - OAuth2: [write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanApplicationRequest'
+      responses:
+        '201':
+          description: Loan application submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanApplication'
+        '400':
+          description: Invalid loan application
+
+  /notifications/subscribe:
+    post:
+      summary: Subscribe to notifications
+      description: Subscribe to real-time notifications via WebSocket
+      operationId: subscribeNotifications
+      tags:
+        - Notifications
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationSubscription'
+      responses:
+        '200':
+          description: Subscription successful
+        '400':
+          description: Invalid subscription request
+
+  /compliance/reports:
+    get:
+      summary: Get compliance reports
+      description: Retrieve regulatory compliance reports
+      operationId: getComplianceReports
+      tags:
+        - Compliance
+      security:
+        - OAuth2: [compliance_read]
+      parameters:
+        - name: reportType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [aml, kyc, suspicious_activity, regulatory_filing]
+        - name: startDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Compliance report generated
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Insufficient permissions
+
+components:
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: john.doe@email.com
+        password:
+          type: string
+          format: password
+        deviceId:
+          type: string
+          description: Unique device identifier for security
+        clientInfo:
+          $ref: '#/components/schemas/ClientInfo'
+
+    ClientInfo:
+      type: object
+      properties:
+        userAgent:
+          type: string
+        ipAddress:
+          type: string
+          format: ipv4
+        platform:
+          type: string
+          enum: [web, mobile, api]
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+        tokenType:
+          type: string
+          default: Bearer
+        mfaRequired:
+          type: boolean
+        mfaToken:
+          type: string
+          description: Temporary token for MFA verification
+
+    MFAVerificationRequest:
+      type: object
+      required:
+        - mfaToken
+        - code
+      properties:
+        mfaToken:
+          type: string
+        code:
+          type: string
+          pattern: '^[0-9]{6}$'
+        method:
+          type: string
+          enum: [sms, email, totp, hardware_token]
+
+    Customer:
+      type: object
+      required:
+        - id
+        - email
+        - firstName
+        - lastName
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        phoneNumber:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        status:
+          type: string
+          enum: [active, inactive, suspended, pending]
+        accountType:
+          type: string
+          enum: [personal, business, corporate]
+        kycStatus:
+          type: string
+          enum: [pending, verified, rejected, expired]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CustomerDetails:
+      allOf:
+        - $ref: '#/components/schemas/Customer'
+        - type: object
+          properties:
+            accounts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Account'
+            riskProfile:
+              $ref: '#/components/schemas/RiskProfile'
+            preferences:
+              $ref: '#/components/schemas/CustomerPreferences'
+
+    Address:
+      type: object
+      required:
+        - street
+        - city
+        - country
+        - postalCode
+      properties:
+        street:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        country:
+          type: string
+        postalCode:
+          type: string
+
+    Account:
+      type: object
+      required:
+        - id
+        - accountNumber
+        - type
+        - currency
+        - balance
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountNumber:
+          type: string
+          pattern: '^[0-9]{10,12}$'
+        type:
+          type: string
+          enum: [checking, savings, credit, loan, investment]
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+          example: USD
+        balance:
+          $ref: '#/components/schemas/Money'
+        availableBalance:
+          $ref: '#/components/schemas/Money'
+        status:
+          type: string
+          enum: [active, inactive, frozen, closed]
+        interestRate:
+          type: number
+          format: float
+          minimum: 0
+        overdraftLimit:
+          $ref: '#/components/schemas/Money'
+        createdAt:
+          type: string
+          format: date-time
+
+    Money:
+      type: object
+      required:
+        - amount
+        - currency
+      properties:
+        amount:
+          type: number
+          format: decimal
+          multipleOf: 0.01
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+
+    Transaction:
+      type: object
+      required:
+        - id
+        - accountId
+        - type
+        - amount
+        - status
+        - timestamp
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [debit, credit, transfer, fee, interest, dividend]
+        amount:
+          $ref: '#/components/schemas/Money'
+        description:
+          type: string
+        category:
+          type: string
+        merchantInfo:
+          $ref: '#/components/schemas/MerchantInfo'
+        status:
+          type: string
+          enum: [pending, completed, failed, cancelled]
+        timestamp:
+          type: string
+          format: date-time
+        balanceAfter:
+          $ref: '#/components/schemas/Money'
+
+    MerchantInfo:
+      type: object
+      properties:
+        name:
+          type: string
+        category:
+          type: string
+        location:
+          $ref: '#/components/schemas/Address'
+
+    TransferRequest:
+      type: object
+      required:
+        - fromAccountId
+        - toAccountId
+        - amount
+      properties:
+        fromAccountId:
+          type: string
+          format: uuid
+        toAccountId:
+          type: string
+          format: uuid
+        amount:
+          $ref: '#/components/schemas/Money'
+        description:
+          type: string
+        scheduledDate:
+          type: string
+          format: date-time
+        recurring:
+          $ref: '#/components/schemas/RecurringTransfer'
+
+    RecurringTransfer:
+      type: object
+      properties:
+        frequency:
+          type: string
+          enum: [daily, weekly, biweekly, monthly, quarterly, annually]
+        endDate:
+          type: string
+          format: date
+        maxOccurrences:
+          type: integer
+          minimum: 1
+
+    TransferResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [completed, pending, failed]
+        confirmationNumber:
+          type: string
+        estimatedCompletionTime:
+          type: string
+          format: date-time
+        fees:
+          type: array
+          items:
+            $ref: '#/components/schemas/Fee'
+
+    Fee:
+      type: object
+      properties:
+        type:
+          type: string
+        amount:
+          $ref: '#/components/schemas/Money'
+        description:
+          type: string
+
+    Loan:
+      type: object
+      required:
+        - id
+        - type
+        - principalAmount
+        - interestRate
+        - term
+        - status
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [personal, auto, mortgage, business, student]
+        principalAmount:
+          $ref: '#/components/schemas/Money'
+        interestRate:
+          type: number
+          format: float
+        term:
+          type: integer
+          description: Loan term in months
+        monthlyPayment:
+          $ref: '#/components/schemas/Money'
+        remainingBalance:
+          $ref: '#/components/schemas/Money'
+        status:
+          type: string
+          enum: [active, paid_off, defaulted, in_review]
+        nextPaymentDate:
+          type: string
+          format: date
+        originationDate:
+          type: string
+          format: date
+
+    LoanApplicationRequest:
+      type: object
+      required:
+        - type
+        - requestedAmount
+        - purpose
+        - term
+      properties:
+        type:
+          type: string
+          enum: [personal, auto, mortgage, business, student]
+        requestedAmount:
+          $ref: '#/components/schemas/Money'
+        purpose:
+          type: string
+        term:
+          type: integer
+          description: Requested term in months
+        collateral:
+          $ref: '#/components/schemas/Collateral'
+        employmentInfo:
+          $ref: '#/components/schemas/EmploymentInfo'
+        financialInfo:
+          $ref: '#/components/schemas/FinancialInfo'
+
+    Collateral:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [vehicle, real_estate, securities, other]
+        description:
+          type: string
+        estimatedValue:
+          $ref: '#/components/schemas/Money'
+
+    EmploymentInfo:
+      type: object
+      properties:
+        employer:
+          type: string
+        position:
+          type: string
+        annualIncome:
+          $ref: '#/components/schemas/Money'
+        employmentStartDate:
+          type: string
+          format: date
+        employmentType:
+          type: string
+          enum: [full_time, part_time, contract, self_employed]
+
+    FinancialInfo:
+      type: object
+      properties:
+        monthlyIncome:
+          $ref: '#/components/schemas/Money'
+        monthlyExpenses:
+          $ref: '#/components/schemas/Money'
+        assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/Asset'
+        liabilities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Liability'
+
+    Asset:
+      type: object
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        value:
+          $ref: '#/components/schemas/Money'
+
+    Liability:
+      type: object
+      properties:
+        type:
+          type: string
+        description:
+          type: string
+        balance:
+          $ref: '#/components/schemas/Money'
+        monthlyPayment:
+          $ref: '#/components/schemas/Money'
+
+    RiskProfile:
+      type: object
+      properties:
+        riskScore:
+          type: integer
+          minimum: 1
+          maximum: 1000
+        riskLevel:
+          type: string
+          enum: [low, medium, high, very_high]
+        factors:
+          type: array
+          items:
+            type: string
+        lastAssessment:
+          type: string
+          format: date-time
+
+    CustomerPreferences:
+      type: object
+      properties:
+        communicationChannels:
+          type: array
+          items:
+            type: string
+            enum: [email, sms, push, mail]
+        language:
+          type: string
+          pattern: '^[a-z]{2}$'
+        timezone:
+          type: string
+        notifications:
+          $ref: '#/components/schemas/NotificationPreferences'
+
+    NotificationPreferences:
+      type: object
+      properties:
+        transactionAlerts:
+          type: boolean
+        lowBalanceAlerts:
+          type: boolean
+        securityAlerts:
+          type: boolean
+        marketingCommunications:
+          type: boolean
+
+    NotificationSubscription:
+      type: object
+      required:
+        - channels
+        - events
+      properties:
+        channels:
+          type: array
+          items:
+            type: string
+            enum: [websocket, webhook, email, sms]
+        events:
+          type: array
+          items:
+            type: string
+            enum: [transaction, balance_change, security_alert, system_maintenance]
+        webhookUrl:
+          type: string
+          format: uri
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          format: uuid
+
+    CustomerListResponse:
+      type: object
+      properties:
+        customers:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    TransactionListResponse:
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        pagination:
+          $ref: '#/components/schemas/PaginationInfo'
+
+    PaginationInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+
+    CreateCustomerRequest:
+      type: object
+      required:
+        - email
+        - firstName
+        - lastName
+        - dateOfBirth
+        - address
+      properties:
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        phoneNumber:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        accountType:
+          type: string
+          enum: [personal, business, corporate]
+          default: personal
+
+    OpenAccountRequest:
+      type: object
+      required:
+        - type
+        - currency
+      properties:
+        type:
+          type: string
+          enum: [checking, savings, credit, investment]
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+        initialDeposit:
+          $ref: '#/components/schemas/Money'
+        jointAccountHolders:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    BatchTransactionRequest:
+      type: object
+      required:
+        - transactions
+      properties:
+        transactions:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransferRequest'
+          maxItems: 100
+        executeAllOrNone:
+          type: boolean
+          default: true
+
+    BatchTransactionResponse:
+      type: object
+      properties:
+        batchId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [completed, failed, partial]
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              transactionIndex:
+                type: integer
+              status:
+                type: string
+                enum: [success, failed]
+              transactionId:
+                type: string
+                format: uuid
+              error:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    LoanApplication:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [submitted, under_review, approved, rejected, withdrawn]
+        submittedAt:
+          type: string
+          format: date-time
+        reviewNotes:
+          type: array
+          items:
+            type: string
+        expectedDecisionDate:
+          type: string
+          format: date
+
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.bank.com/oauth/authorize
+          tokenUrl: https://auth.bank.com/oauth/token
+          refreshUrl: https://auth.bank.com/oauth/refresh
+          scopes:
+            read: Read access to account data
+            write: Write access to perform transactions
+            admin: Administrative access
+            compliance_read: Access to compliance reports
+            batch_write: Batch transaction processing
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
