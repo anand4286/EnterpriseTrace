@@ -18,6 +18,7 @@ import { dashboardRouter } from './routes/dashboard';
 import { openApiRouter } from './routes/openapi';
 import { traceabilityRouter } from './routes/traceability';
 import { testRouter } from './routes/test';
+import { releaseRouter } from './routes/releases';
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -84,6 +85,7 @@ app.use('/api/dashboard', dashboardRouter);
 app.use('/api/openapi', openApiRouter);
 app.use('/api/traceability', traceabilityRouter);
 app.use('/api/test', testRouter);
+app.use('/api/releases', releaseRouter);
 
 // Audit logs endpoint
 app.get('/api/audit-logs', (req: Request, res: Response) => {

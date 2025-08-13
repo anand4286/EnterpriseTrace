@@ -107,7 +107,7 @@ const Dashboard: React.FC = () => {
       setError(null);
       
       // Fetch real data from backend API
-      const response = await fetch('http://localhost:3001/api/dashboard/overview');
+      const response = await fetch('http://localhost:8080/api/dashboard/overview');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -314,7 +314,7 @@ const Dashboard: React.FC = () => {
           </Typography>
           <LinearProgress className="w-64" />
           <Typography variant="body2" className="mt-2 text-slate-500">
-            Connecting to backend API at localhost:3001
+            Connecting to backend API at localhost:8080
           </Typography>
         </Box>
       </Box>
@@ -346,7 +346,7 @@ const Dashboard: React.FC = () => {
             </Typography>
             <Box className="text-left space-y-2">
               <Typography variant="body2" className="text-slate-600">
-                1. Ensure backend server is running on http://localhost:3001
+                1. Ensure backend server is running on http://localhost:8080
               </Typography>
               <Typography variant="body2" className="text-slate-600">
                 2. Check that the API endpoint /api/dashboard/overview is accessible
