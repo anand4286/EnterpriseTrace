@@ -8,6 +8,7 @@ import {
   CircularProgress,
   Button
 } from '@mui/material';
+import { config } from '../utils/config';
 
 const ApiDocumentation: React.FC = () => {
   const [swaggerSpec, setSwaggerSpec] = useState<any>(null);
@@ -24,7 +25,7 @@ const ApiDocumentation: React.FC = () => {
       setError(null);
       
       // First, try to get the swagger spec from our backend
-      const response = await fetch('http://localhost:8080/api-docs/swagger.json');
+      const response = await fetch(config.buildApiUrl('/api-docs/swagger.json'));
       
       if (!response.ok) {
         throw new Error(`Failed to fetch swagger spec: ${response.status}`);
@@ -50,8 +51,8 @@ const ApiDocumentation: React.FC = () => {
         },
         servers: [
           {
-            url: 'http://localhost:8080',
-            description: 'Development server'
+            url: config.apiBaseUrl,
+            description: `${config.environment} server`
           }
         ],
         paths: {

@@ -59,6 +59,7 @@ import {
   Devices as ChannelIcon,
   Timeline as TimelineIcon
 } from '@mui/icons-material';
+import { config } from '../utils/config';
 
 // Type definitions
 interface UserJourney {
@@ -256,7 +257,7 @@ const TraceabilityMatrix: React.FC = () => {
   const loadTraceabilityData = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/api/traceability/overview');
+      const response = await fetch(config.buildApiUrl('/traceability/overview'));
       const result = await response.json();
       
       if (result.success) {

@@ -39,6 +39,7 @@ import {
   Delete as DeleteIcon,
   MoreVert as MoreVertIcon
 } from '@mui/icons-material';
+import { config } from '../utils/config';
 
 interface Release {
   id: string;
@@ -152,7 +153,7 @@ const ReleaseManagement: React.FC = () => {
   const loadReleases = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:8080/api/releases');
+      const response = await fetch(config.buildApiUrl('/releases'));
       const result = await response.json();
       
       if (result.success) {
@@ -203,7 +204,7 @@ const ReleaseManagement: React.FC = () => {
   const handleDeleteRelease = async (releaseId: string) => {
     if (window.confirm('Are you sure you want to delete this release?')) {
       try {
-        const response = await fetch(`http://localhost:8080/api/releases/${releaseId}`, {
+        const response = await fetch(config.buildApiUrl(`/releases/${releaseId}`), {
           method: 'DELETE'
         });
         const result = await response.json();
@@ -232,8 +233,8 @@ const ReleaseManagement: React.FC = () => {
       };
 
       const url = editingRelease 
-        ? `http://localhost:8080/api/releases/${editingRelease.id}`
-        : 'http://localhost:8080/api/releases';
+        ? config.buildApiUrl(`/releases/${editingRelease.id}`)
+        : config.buildApiUrl('/releases');
       
       const method = editingRelease ? 'PUT' : 'POST';
       
@@ -287,7 +288,7 @@ const ReleaseManagement: React.FC = () => {
   const handleDeleteRisk = async (riskId: string, releaseId: string) => {
     if (window.confirm('Are you sure you want to delete this risk?')) {
       try {
-        const response = await fetch(`http://localhost:8080/api/releases/${releaseId}/risks/${riskId}`, {
+        const response = await fetch(config.buildApiUrl(`/releases/${releaseId}/risks/${riskId}`), {
           method: 'DELETE'
         });
         const result = await response.json();
@@ -314,8 +315,8 @@ const ReleaseManagement: React.FC = () => {
       };
 
       const url = editingRisk 
-        ? `http://localhost:8080/api/releases/${selectedReleaseId}/risks/${editingRisk.id}`
-        : `http://localhost:8080/api/releases/${selectedReleaseId}/risks`;
+        ? config.buildApiUrl(`/releases/${selectedReleaseId}/risks/${editingRisk.id}`)
+        : config.buildApiUrl(`/releases/${selectedReleaseId}/risks`);
       
       const method = editingRisk ? 'PUT' : 'POST';
       

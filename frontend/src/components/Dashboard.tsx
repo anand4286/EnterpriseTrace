@@ -22,6 +22,7 @@ import {
   Avatar,
   IconButton
 } from '@mui/material';
+import { config } from '../utils/config';
 import {
   Groups,
   Computer,
@@ -107,7 +108,7 @@ const Dashboard: React.FC = () => {
       setError(null);
       
       // Fetch real data from backend API
-      const response = await fetch('http://localhost:8080/api/dashboard/overview');
+      const response = await fetch(config.buildApiUrl('/dashboard/overview'));
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -346,7 +347,7 @@ const Dashboard: React.FC = () => {
             </Typography>
             <Box className="text-left space-y-2">
               <Typography variant="body2" className="text-slate-600">
-                1. Ensure backend server is running on http://localhost:8080
+                1. Ensure backend server is running on {config.apiBaseUrl}
               </Typography>
               <Typography variant="body2" className="text-slate-600">
                 2. Check that the API endpoint /api/dashboard/overview is accessible
