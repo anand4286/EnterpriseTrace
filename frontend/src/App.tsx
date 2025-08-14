@@ -29,7 +29,8 @@ import {
   Category as ChapterIcon,
   Description as ApiIcon,
   Menu as MenuIcon,
-  ChevronLeft as ChevronLeftIcon
+  ChevronLeft as ChevronLeftIcon,
+  TrendingUp
 } from '@mui/icons-material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
@@ -46,6 +47,7 @@ import ChapterManagement from './components/ChapterManagement';
 import ApiDocumentation from './components/ApiDocumentation';
 import ApiTest from './components/ApiTest';
 import UserAutocompleteDemo from './components/UserAutocompleteDemo';
+import LiveProjectDashboard from './components/LiveProjectDashboard';
 
 const theme = createTheme({
   palette: {
@@ -105,6 +107,8 @@ const AuthenticatedApp: React.FC = () => {
         return <ApiTest />;
       case 'user-autocomplete-demo':
         return <UserAutocompleteDemo />;
+      case 'live-dashboard':
+        return <LiveProjectDashboard />;
       default:
         return <Dashboard />;
     }
@@ -221,6 +225,26 @@ const AuthenticatedApp: React.FC = () => {
                 startIcon={<DashboardIcon />}
               >
                 {drawerOpen && 'Dashboard'}
+              </Button>
+            </Tooltip>
+
+            <Tooltip title={!drawerOpen ? 'Live Dashboard' : ''} placement="right">
+              <Button 
+                fullWidth 
+                variant={currentPage === 'live-dashboard' ? 'contained' : 'text'}
+                onClick={() => setCurrentPage('live-dashboard')}
+                sx={{ 
+                  mb: 1, 
+                  justifyContent: drawerOpen ? 'flex-start' : 'center',
+                  minWidth: drawerOpen ? 'auto' : '56px',
+                  transition: 'all 0.3s ease',
+                  '& .MuiButton-startIcon': { 
+                    margin: drawerOpen ? '0 8px 0 0' : '0',
+                  }
+                }}
+                startIcon={<TrendingUp />}
+              >
+                {drawerOpen && 'Live Dashboard'}
               </Button>
             </Tooltip>
 
