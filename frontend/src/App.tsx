@@ -46,6 +46,7 @@ import ApiDocumentation from './components/ApiDocumentation';
 import ApiTest from './components/ApiTest';
 import UserAutocompleteDemo from './components/UserAutocompleteDemo';
 import LiveProjectDashboard from './components/LiveProjectDashboard';
+import TechStackInsights from './components/TechStackInsights';
 
 const theme = createTheme({
   palette: {
@@ -519,6 +520,13 @@ const AuthenticatedApp: React.FC = () => {
           transition: 'margin-left 0.3s ease',
         }}
       >
+        {/* Tech Stack Insights - Always shown at the top */}
+        <TechStackInsights 
+          onNavigateToTechStack={() => setCurrentPage('technical-configuration')}
+          currentPage={currentPage}
+        />
+        
+        {/* Main Content */}
         {renderContent()}
       </Box>
     </Box>
