@@ -37,6 +37,15 @@ The TSR system has evolved into a complete **enterprise SaaS platform** capable 
 
 ## 🏗️ Architecture
 
+### System Requirements
+```
+Node.js:   18.0.0+ (Recommended: 18.18.0 LTS)
+npm:       8.0.0+ (Latest stable recommended)
+Platform:  macOS, Linux, Windows
+Memory:    4GB RAM minimum, 8GB recommended
+Storage:   2GB available space
+```
+
 ### Technology Stack
 ```
 Frontend:  React 18 + TypeScript + Material-UI
@@ -117,21 +126,51 @@ TSR/
 ## 🛠️ Installation & Setup
 
 ### Prerequisites
-- **Node.js** 18+ with npm
+- **Node.js** 18.0.0+ (Recommended: 18.18.0 LTS) - [Version Management Guide](./NODE-VERSION-MANAGEMENT.md)
+- **npm** 8.0.0+ (Latest stable recommended)
 - **PostgreSQL** 13+ database server
 - **Redis** 6+ for caching
 - **Docker** (optional, for containerized deployment)
 
-### 1. Clone & Install Dependencies
+### Quick Start for New Machines
+
+#### Option 1: Using NVM (Recommended)
 ```bash
+# Install and use correct Node.js version
+nvm install 18.18.0
+nvm use 18.18.0
+nvm alias default 18.18.0
+
+# Clone and setup project with automatic version checking
+git clone https://github.com/your-org/TSR.git
+cd TSR
+npm run setup  # Includes version check + dependencies
+```
+
+#### Option 2: Manual Setup
+```bash
+# 1. Check Node.js version compatibility
+./scripts/check-node-version.sh
+
+# 2. Clone repository
 git clone https://github.com/your-org/TSR.git
 cd TSR
 
-# Install backend dependencies
-npm install
-
-# Install frontend dependencies
+# 3. Install dependencies with version enforcement
+npm install  # Automatically checks Node.js version
 cd frontend && npm install && cd ..
+```
+
+### 1. Node.js Version Management
+```bash
+# Check version compatibility
+npm run check-versions
+
+# View detailed version requirements
+cat NODE-VERSION-MANAGEMENT.md
+
+# If using different Node.js version, switch to recommended:
+nvm use 18.18.0  # or nvm use (uses .nvmrc)
 ```
 
 ### 2. Database Setup

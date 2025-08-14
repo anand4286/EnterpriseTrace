@@ -1,5 +1,6 @@
 # Multi-stage build for Node.js application
-FROM node:18-alpine AS base
+# Using specific Node.js LTS version for consistency
+FROM node:18.18.0-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
@@ -8,6 +9,7 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 COPY frontend/package*.json ./frontend/
+COPY .npmrc ./
 
 # Install dependencies
 RUN npm ci --only=production && \
