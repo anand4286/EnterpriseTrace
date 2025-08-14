@@ -17,7 +17,6 @@ import {
 } from '@mui/material';
 import { 
   AccountCircle,
-  Dashboard as DashboardIcon,
   Assignment as TraceabilityIcon,
   Quiz as TestIcon,
   Business as BusinessIcon,
@@ -34,7 +33,6 @@ import {
 } from '@mui/icons-material';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Login from './components/Login';
-import Dashboard from './components/Dashboard';
 import TraceabilityMatrix from './components/TraceabilityMatrix';
 import TestResults from './components/TestResults';
 import BusinessRequirementsDashboard from './components/BusinessRequirementsDashboard';
@@ -82,7 +80,8 @@ const AuthenticatedApp: React.FC = () => {
   const renderContent = () => {
     switch (currentPage) {
       case 'dashboard':
-        return <Dashboard />;
+      case 'live-dashboard':
+        return <LiveProjectDashboard />;
       case 'traceability':
         return <TraceabilityMatrix />;
       case 'test-results':
@@ -107,10 +106,8 @@ const AuthenticatedApp: React.FC = () => {
         return <ApiTest />;
       case 'user-autocomplete-demo':
         return <UserAutocompleteDemo />;
-      case 'live-dashboard':
-        return <LiveProjectDashboard />;
       default:
-        return <Dashboard />;
+        return <LiveProjectDashboard />;
     }
   };
 
@@ -208,31 +205,11 @@ const AuthenticatedApp: React.FC = () => {
               </Typography>
             )}
             
-            <Tooltip title={!drawerOpen ? 'Dashboard' : ''} placement="right">
-              <Button 
-                fullWidth 
-                variant={currentPage === 'dashboard' ? 'contained' : 'text'}
-                onClick={() => setCurrentPage('dashboard')}
-                sx={{ 
-                  mb: 1, 
-                  justifyContent: drawerOpen ? 'flex-start' : 'center',
-                  minWidth: drawerOpen ? 'auto' : '56px',
-                  transition: 'all 0.3s ease',
-                  '& .MuiButton-startIcon': { 
-                    margin: drawerOpen ? '0 8px 0 0' : '0',
-                  }
-                }}
-                startIcon={<DashboardIcon />}
-              >
-                {drawerOpen && 'Dashboard'}
-              </Button>
-            </Tooltip>
-
             <Tooltip title={!drawerOpen ? 'Live Dashboard' : ''} placement="right">
               <Button 
                 fullWidth 
-                variant={currentPage === 'live-dashboard' ? 'contained' : 'text'}
-                onClick={() => setCurrentPage('live-dashboard')}
+                variant={currentPage === 'dashboard' || currentPage === 'live-dashboard' ? 'contained' : 'text'}
+                onClick={() => setCurrentPage('dashboard')}
                 sx={{ 
                   mb: 1, 
                   justifyContent: drawerOpen ? 'flex-start' : 'center',

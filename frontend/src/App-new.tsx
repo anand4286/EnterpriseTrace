@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Box, CssBaseline, AppBar, Toolbar, Typography, IconButton, Drawer, List, ListItem, ListItemIcon, ListItemText, Divider } from '@mui/material';
 import { 
   Menu as MenuIcon, 
-  Dashboard as DashboardIcon, 
+  TrendingUp as TrendingUpIcon, 
   Timeline as TimelineIcon, 
   BugReport as BugReportIcon, 
   Api as ApiIcon,
   Business as BusinessIcon,
   Settings as SettingsIcon
 } from '@mui/icons-material';
-import Dashboard from './components/Dashboard';
+import LiveProjectDashboard from './components/LiveProjectDashboard';
 import TraceabilityMatrix from './components/TraceabilityMatrix';
 import TestResults from './components/TestResults';
 import ApiDocumentation from './components/ApiDocumentation';
@@ -44,7 +44,7 @@ function App() {
       case 'technical':
         return <TechnicalConfigurationDashboard />;
       default:
-        return <Dashboard />;
+        return <LiveProjectDashboard />;
     }
   };
 
@@ -86,9 +86,9 @@ function App() {
           <List>
             <ListItem button onClick={() => handleMenuClick('dashboard')}>
               <ListItemIcon>
-                <DashboardIcon />
+                <TrendingUpIcon />
               </ListItemIcon>
-              <ListItemText primary="Dashboard" />
+              <ListItemText primary="Live Dashboard" />
             </ListItem>
             <ListItem button onClick={() => handleMenuClick('traceability')}>
               <ListItemIcon>

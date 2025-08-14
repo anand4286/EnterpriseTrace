@@ -9,6 +9,7 @@ import { openApiRouter } from './routes/openapi';
 import { dashboardRouter } from './routes/dashboard';
 import { traceabilityRouter } from './routes/traceability';
 import { testRouter } from './routes/test';
+import { releaseRouter } from './routes/releases';
 
 // Load environment variables
 dotenv.config();
@@ -60,6 +61,7 @@ app.use('/api/openapi', openApiRouter);
 app.use('/api/dashboard', dashboardRouter);
 app.use('/api/traceability', traceabilityRouter);
 app.use('/api/test', testRouter);
+app.use('/api/releases', releaseRouter);
 
 // Serve static files (for frontend)
 app.use(express.static('frontend/build'));

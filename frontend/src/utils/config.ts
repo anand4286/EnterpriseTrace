@@ -17,7 +17,7 @@ class ConfigService {
 
   private constructor() {
     this.config = {
-      apiBaseUrl: this.getEnvVar('REACT_APP_API_BASE_URL', 'http://localhost:8080'),
+      apiBaseUrl: this.getEnvVar('REACT_APP_API_BASE_URL', 'http://localhost:8081'),
       apiVersion: this.getEnvVar('REACT_APP_API_VERSION', 'v1'),
       environment: this.getEnvVar('REACT_APP_ENVIRONMENT', 'development'),
       appName: this.getEnvVar('REACT_APP_APP_NAME', 'Enterprise Trace'),

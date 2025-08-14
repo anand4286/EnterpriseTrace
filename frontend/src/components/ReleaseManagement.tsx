@@ -149,17 +149,62 @@ const ReleaseManagement: React.FC = () => {
     owner: ''
   });
 
-  // Load releases from API on component mount
+  // Load releases from localStorage
   const loadReleases = async () => {
     try {
       setLoading(true);
-      const response = await fetch(config.buildApiUrl('/releases'));
-      const result = await response.json();
       
-      if (result.success) {
-        setReleases(result.data);
+      // Try to load from localStorage first
+      const storedReleases = localStorage.getItem('releases');
+      if (storedReleases) {
+        setReleases(JSON.parse(storedReleases));
       } else {
-        console.error('Failed to load releases:', result.error);
+        // If no stored releases, use default sample data
+        const defaultReleases = [
+          {
+            id: '1',
+            name: 'Q4 Platform Release',
+            version: '2.1.0',
+            status: 'development' as const,
+            progress: 65,
+            startDate: '2024-10-01',
+            targetDate: '2024-12-15',
+            squads: ['Frontend Team', 'Backend Team'],
+            description: 'Major platform upgrade with new features',
+            risks: [],
+            readinessChecks: [
+              {
+                id: '1',
+                category: 'Technical',
+                item: 'Database Migration',
+                status: 'completed' as const,
+                squadId: '1',
+                chapterId: '1',
+                dueDate: '2024-11-15'
+              },
+              {
+                id: '2',
+                category: 'Security',
+                item: 'Security Audit',
+                status: 'in-progress' as const,
+                squadId: '2',
+                chapterId: '2',
+                dueDate: '2024-12-01'
+              },
+              {
+                id: '3',
+                category: 'Performance',
+                item: 'Load Testing',
+                status: 'pending' as const,
+                squadId: '1',
+                chapterId: '3',
+                dueDate: '2024-12-10'
+              }
+            ]
+          }
+        ];
+        setReleases(defaultReleases);
+        localStorage.setItem('releases', JSON.stringify(defaultReleases));
       }
     } catch (error) {
       console.error('Error loading releases:', error);
@@ -204,16 +249,12 @@ const ReleaseManagement: React.FC = () => {
   const handleDeleteRelease = async (releaseId: string) => {
     if (window.confirm('Are you sure you want to delete this release?')) {
       try {
-        const response = await fetch(config.buildApiUrl(`/releases/${releaseId}`), {
-          method: 'DELETE'
-        });
-        const result = await response.json();
+        // Delete from localStorage
+        const existingReleases = JSON.parse(localStorage.getItem('releases') || '[]');
+        const updatedReleases = existingReleases.filter((release: any) => release.id !== releaseId);
+        localStorage.setItem('releases', JSON.stringify(updatedReleases));
         
-        if (result.success) {
-          await loadReleases(); // Reload releases from server
-        } else {
-          alert('Failed to delete release: ' + result.error);
-        }
+        await loadReleases(); // Reload releases from localStorage
       } catch (error) {
         alert('Error deleting release: ' + error);
       }
@@ -223,37 +264,36 @@ const ReleaseManagement: React.FC = () => {
   const handleSaveRelease = async () => {
     try {
       const releaseData = {
+        id: editingRelease?.id || Date.now().toString(),
         name: releaseForm.name,
         version: releaseForm.version,
         status: releaseForm.status,
         startDate: releaseForm.startDate,
         targetDate: releaseForm.targetDate,
         squads: releaseForm.squads,
-        description: releaseForm.description
+        description: releaseForm.description,
+        progress: 0,
+        risks: [],
+        features: []
       };
 
-      const url = editingRelease 
-        ? config.buildApiUrl(`/releases/${editingRelease.id}`)
-        : config.buildApiUrl('/releases');
+      // Use localStorage instead of API for now
+      const existingReleases = JSON.parse(localStorage.getItem('releases') || '[]');
       
-      const method = editingRelease ? 'PUT' : 'POST';
-      
-      const response = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(releaseData)
-      });
-      
-      const result = await response.json();
-      
-      if (result.success) {
-        setOpenReleaseDialog(false);
-        await loadReleases(); // Reload releases from server
+      if (editingRelease) {
+        // Update existing release
+        const updatedReleases = existingReleases.map((release: any) => 
+          release.id === editingRelease.id ? releaseData : release
+        );
+        localStorage.setItem('releases', JSON.stringify(updatedReleases));
       } else {
-        alert('Failed to save release: ' + result.error);
+        // Add new release
+        existingReleases.push(releaseData);
+        localStorage.setItem('releases', JSON.stringify(existingReleases));
       }
+
+      setOpenReleaseDialog(false);
+      await loadReleases(); // Reload releases from localStorage
     } catch (error) {
       alert('Error saving release: ' + error);
     }
@@ -288,16 +328,20 @@ const ReleaseManagement: React.FC = () => {
   const handleDeleteRisk = async (riskId: string, releaseId: string) => {
     if (window.confirm('Are you sure you want to delete this risk?')) {
       try {
-        const response = await fetch(config.buildApiUrl(`/releases/${releaseId}/risks/${riskId}`), {
-          method: 'DELETE'
+        // Delete risk from localStorage
+        const existingReleases = JSON.parse(localStorage.getItem('releases') || '[]');
+        const updatedReleases = existingReleases.map((release: any) => {
+          if (release.id === releaseId) {
+            return {
+              ...release,
+              risks: release.risks.filter((risk: any) => risk.id !== riskId)
+            };
+          }
+          return release;
         });
-        const result = await response.json();
+        localStorage.setItem('releases', JSON.stringify(updatedReleases));
         
-        if (result.success) {
-          await loadReleases(); // Reload releases from server
-        } else {
-          alert('Failed to delete risk: ' + result.error);
-        }
+        await loadReleases(); // Reload releases from localStorage
       } catch (error) {
         alert('Error deleting risk: ' + error);
       }
@@ -643,7 +687,11 @@ const ReleaseManagement: React.FC = () => {
 
   const renderReadiness = () => (
     <Grid container spacing={2}>
-      {releases.flatMap(release => release.readinessChecks).map((check) => (
+      {releases
+        .filter(release => release && release.readinessChecks)
+        .flatMap(release => release.readinessChecks)
+        .filter(check => check && check.id && check.item)
+        .map((check) => (
         <Grid item xs={12} md={6} key={check.id}>
           <Card>
             <CardContent>
